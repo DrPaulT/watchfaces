@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">DLA Watchface</string>
+    <string name="description">A watchface based on the mathematics of diffusion-limited
+        aggregation.</string>
+</resources>

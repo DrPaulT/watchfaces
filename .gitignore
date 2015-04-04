@@ -1,0 +1,15 @@
+bin
+gen
+gradle
+gradlew
+gradlew.bat
+**/build
+**/.gradle
+**/.idea
+**/*.apk
+**/*.ap_
+**/*.dex
+**/*.class
+**/local.properties
+**/.DS_Store
+**/manifest-merger-release-report.txt
