@@ -48,7 +48,6 @@ public class DlaWatchFaceService extends Gles2WatchFaceService {
         private long startMillis;
         private int minute = -1;
         private double azimuthRandom = Math.PI - 0.3;
-        private double heightRandom = 0;
         // Nudge display slightly to prevent burn-in on Amoleds.
         private double xJitter = 0;
         private double yJitter = 0;
@@ -96,7 +95,7 @@ public class DlaWatchFaceService extends Gles2WatchFaceService {
         public void onGlSurfaceCreated(int width, int height) {
             super.onGlSurfaceCreated(width, height);
             float aspectRatio = (float) width / height;
-            float dist = 0.01f;
+            float dist = 0.001f;
             Matrix.frustumM(projectionMatrix, 0,
                     -aspectRatio * dist, aspectRatio * dist, // Left, right.
                     -dist, dist, // Bottom, top.
@@ -111,7 +110,6 @@ public class DlaWatchFaceService extends Gles2WatchFaceService {
                 xJitter = Math.random() * 0.05 - 0.025;
                 yJitter = Math.random() * 0.05 - 0.025;
                 azimuthRandom = Math.PI + Math.random() * 1.8 - 0.9;
-                heightRandom = Math.random() * 0.5;
                 startMillis = SystemClock.elapsedRealtime();
             }
             invalidate();
@@ -154,7 +152,7 @@ public class DlaWatchFaceService extends Gles2WatchFaceService {
             GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
         }
 
-       private void initialiseAmbient() {
+        private void initialiseAmbient() {
             float textureS = getTextureS();
             createModelviewMatrix(textureS, 1);
             Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, modelviewMatrix, 0);
@@ -184,12 +182,12 @@ public class DlaWatchFaceService extends Gles2WatchFaceService {
         private void createModelviewMatrix(float texS, double delta) {
             double x = (texS - 0.5) * 2;
             double y = x * x * x / 2.51;
-            double distance = 1.4 - delta;
+            double distance = 2.3 - delta * 2;
             double angle = azimuthRandom - (1 - delta);
             Matrix.setLookAtM(modelviewMatrix, 0,
                     (float) (x + distance * 0.5 * Math.sin(angle)), // Eye x.
                     (float) (y + distance * 0.5 * Math.cos(angle)), // Eye y.
-                    (float) (0.25 + heightRandom - distance * 0.2), // Eye z.
+                    (float) (distance * 0.3 + 0.05), // Eye z.
                     (float) (x + xJitter), (float) (y + yJitter), 0, // Look-at.
                     0, 0, 1); // Up
         }
