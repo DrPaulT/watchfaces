@@ -51,18 +51,41 @@ public class Shaders {
                     // blended colour.
                     + "  vec4 colour = texture2D(s_texture, v_texCoord);  \n"
 
-                    // If the texel (texture pixel) is black, then we
-                    // straightaway send out a black pixel to the display.
-                    // This immediately culls a lot of fragment processing.
-                    + "  if (colour.r == 0.0 && colour.g == 0.0 && colour.b == 0.0) {  \n"
-                    + "    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);  \n"
-                    + "    return;  \n"
-                    + "  }  \n"
-
-                    // If the radius from the centre is greater than u_size, then return black.
                     // s in [0..1], the x-coordinate, t in [0..1] as the y-coordinate.
                     + "  float s = v_texCoord.s;  \n"
                     + "  float t = v_texCoord.t;  \n"
+
+                    // If the texel (texture pixel) is black, and we are not drawing the
+                    // "hand" line, then we straightaway send out a black pixel to the display.
+                    // This immediately culls a lot of fragment processing.
+                    + "  if (colour.r == 0.0 && colour.g == 0.0 && colour.b == 0.0) {  \n"
+                    // If we are in the narrow stripe between blue and red sides, then
+                    // output a white pixel of increasing intensity as the radius increases.
+                    + "    if (s < u_now + 0.001 && s > u_now - 0.001) {  \n"
+                    + "      float w = (0.001 - abs(s - u_now)) * 1000.0;  \n"
+                    + "      colour = vec4(w, w, w, 1.0);  \n"
+                    + "    } else {  \n"
+                    + "      gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);  \n"
+                    + "      return;  \n"
+                    + "    }  \n"
+                    + "  } else {  \n"
+
+                    // If the texel is grey then we send out
+                    // a grey pixel, for the numerals and timeline.  This brightens over
+                    // time.
+                    + "    if (colour.r == colour.g && colour.g == colour.b) {  \n"
+                    + "      gl_FragColor = colour * clamp(u_size * 2.0, 0.0, 1.0);  \n"
+                    + "      return;  \n"
+                    + "    }  \n"
+
+                    // Add a blend for coloured pixels near the watch hand.
+                    + "    if (s < u_now + 0.004 && s > u_now - 0.004) {  \n"
+                    + "      float w = (0.004 - abs(s - u_now)) * 250.0;  \n"
+                    + "      colour = vec4(w, w, w, 1.0) + colour;  \n"
+                    + "    }  \n"
+                    + "  }  \n"
+
+                    // If the radius from the centre is greater than u_size, then return black.
                     + "  float len = length(vec2((s - 0.5) * 2.0, (t - 0.5) * 2.0));"
                     // Adding a fudge factor based on the green colour channel makes
                     // different colours expand at different rates.
@@ -73,22 +96,6 @@ public class Shaders {
 
                     // Create a glow colour depending on the distance from the radius.
                     + "  float glow = clamp((0.3 - (u_size - len)) * 2.0, 0.0, 0.6);  \n"
-
-                    // If the texel is grey and within the draw radius, then we send out
-                    // a grey pixel, for the numerals and timeline.  This brightens over
-                    // time.
-                    + "  if (colour.r == colour.g && colour.g == colour.b) {  \n"
-                    + "    gl_FragColor = colour * u_size;  \n"
-                    + "    return;  \n"
-                    + "  }  \n"
-
-                    // If we are in the narrow stripe between blue and red sides, then
-                    // output a white pixel of increasing intensity as the radius increases.
-                    + "  if (s < u_now + 0.002 && s > u_now - 0.002) {  \n"
-                    + "    float w = (0.002 - abs(s - u_now)) * 500.0;  \n"
-                    + "    gl_FragColor = vec4(w, w, w, 1.0) + colour;  \n"
-                    + "    return;  \n"
-                    + "  }  \n"
 
                     // Set up the colours for each side.  We start with blue on
                     // the left in the morning, and swap it to the right in the
@@ -118,17 +125,17 @@ public class Shaders {
                     + "void main(){  \n"
                     + "  vec4 colour = texture2D(s_texture, v_texCoord);  \n"
 
-                    // Output any black pixels.
-                    + "  if (colour.a == 0.0  \n"
-                    + "    || (colour.r == 0.0 && colour.g == 0.0 && colour.b == 0.0)) {  \n"
-                    + "    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);  \n"
-                    + "    return;  \n"
-                    + "  }  \n"
-
                     // The white stripe that forms the watch hand.
                     + "  float s = v_texCoord.s;  \n"
                     + "  if (s < u_now + 0.001 && s > u_now - 0.001) {  \n"
                     + "    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);  \n"
+                    + "    return;  \n"
+                    + "  }  \n"
+
+                    // Output any black pixels.
+                    + "  if (colour.a == 0.0  \n"
+                    + "    || (colour.r == 0.0 && colour.g == 0.0 && colour.b == 0.0)) {  \n"
+                    + "    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);  \n"
                     + "    return;  \n"
                     + "  }  \n"
 
